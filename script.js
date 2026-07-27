@@ -1,5 +1,4 @@
-// On utilise un Tableau au lieu d'un Objet
-let currentGroup = JSON.parse(localStorage.getItem('imported_links_array')) || [];
+let currentGroup = JSON.parse(localStorage.getItem('imported_links_map')) || {};
 
 document.addEventListener('DOMContentLoaded', () => {
   renderList();
@@ -20,7 +19,6 @@ function importLinks() {
 
   if (!rawText) return;
 
-  // Extraction stricte des URLs (ignore le '1.', '2.', etc.)
   const urlRegex = /https?:\/\/[^\s]+/gi;
   const matches = rawText.match(urlRegex);
 
@@ -29,14 +27,13 @@ function importLinks() {
     return;
   }
 
-  // Nettoyage de la ponctuation finale
   const cleanLinks = matches.map(link => link.replace(/[,;.]+$|\)+$/, '').trim());
-
   const baseTimestamp = Date.now();
 
   cleanLinks.forEach((cleanUrl, index) => {
     const timestamp = baseTimestamp + index; 
-    const numero = currentGroup.length + 1;
+    const totalItems = Object.keys(currentGroup).length;
+    const numero = totalItems + 1;
     const nomSite = extractSiteName(cleanUrl);
 
     const now = new Date(timestamp);
@@ -49,12 +46,11 @@ function importLinks() {
 
     const dateFormatted = now.toLocaleDateString('fr-FR');
 
-    const itemKey = `${timestamp}_${nomSite}`;
+    // Ajout de 'numero' dans la clé pour garantir l'unicité même en cas de doublon
+    const itemKey = `${numero}_${timestamp}_${nomSite}`;
     const customId = `${numero}_${timestamp}_${nomSite}`;
 
-    // Ajout simple dans le tableau (.push)
-    currentGroup.push({
-      key: itemKey,
+    currentGroup[itemKey] = {
       id: customId,
       numéro: numero,
       lien: cleanUrl,
@@ -62,7 +58,7 @@ function importLinks() {
       date: dateFormatted,
       heures: heures24,
       timestamp: timestamp
-    });
+    };
   });
 
   saveToStorage();
@@ -76,10 +72,11 @@ function renderList() {
   if (!listEl || !counterEl) return;
 
   listEl.innerHTML = '';
-  counterEl.textContent = `${currentGroup.length} lien(s) dans le groupe`;
 
-  // Copie et inversion pour afficher les récents en premier
-  [...currentGroup].reverse().forEach(item => {
+  const entries = Object.entries(currentGroup);
+  counterEl.textContent = `${entries.length} lien(s) dans le groupe`;
+
+  entries.reverse().forEach(([key, item]) => {
     const card = document.createElement('div');
     card.className = 'item-card';
     card.innerHTML = `
@@ -87,7 +84,7 @@ function renderList() {
         <span>#${item.numéro} — ${item.nom_site}</span>
         <span>${item.heures}</span>
       </div>
-      <div class="item-key">Clé: "${item.key}"</div>
+      <div class="item-key">Clé: "${key}"</div>
       <a href="${item.lien}" target="_blank" rel="noopener" class="item-link">${item.lien}</a>
       <div class="item-meta">
         <span>📅 ${item.date}</span>
@@ -100,11 +97,11 @@ function renderList() {
 }
 
 function saveToStorage() {
-  localStorage.setItem('imported_links_array', JSON.stringify(currentGroup));
+  localStorage.setItem('imported_links_map', JSON.stringify(currentGroup));
 }
 
 function exportJSON() {
-  if (currentGroup.length === 0) return alert('Le groupe est vide !');
+  if (Object.keys(currentGroup).length === 0) return alert('Le groupe est vide !');
 
   const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentGroup, null, 2));
   const downloadAnchor = document.createElement('a');
@@ -118,7 +115,7 @@ function exportJSON() {
 }
 
 function copyJSON() {
-  if (currentGroup.length === 0) return alert('Le groupe est vide !');
+  if (Object.keys(currentGroup).length === 0) return alert('Le groupe est vide !');
 
   navigator.clipboard.writeText(JSON.stringify(currentGroup, null, 2))
     .then(() => alert('JSON copié dans le presse-papier !'))
@@ -127,7 +124,7 @@ function copyJSON() {
 
 function clearGroup() {
   if (confirm('Voulez-vous vraiment effacer tout le groupe actuel ?')) {
-    currentGroup = [];
+    currentGroup = {};
     saveToStorage();
     renderList();
   }
