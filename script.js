@@ -4,11 +4,10 @@ document.addEventListener('DOMContentLoaded', () => {
   renderList();
 });
 
-// Extrait le hostname propre depuis n'importe quelle URL
+// Extrait le hostname propre depuis l'URL (ex: the-joi-database.com)
 function extractSiteName(urlStr) {
   try {
     const parsed = new URL(urlStr);
-    // On retire le "www." s'il existe pour un nom de site plus propre
     return parsed.hostname.replace(/^www\./i, '');
   } catch (e) {
     return 'inconnu';
@@ -21,7 +20,7 @@ function importLinks() {
 
   if (!rawText) return;
 
-  // Regex stricte pour capturer UNIQUEMENT la partie http(s)://...
+  // Extraction stricte des URLs valides (http:// ou https://)
   const urlRegex = /https?:\/\/[^\s]+/gi;
   const matches = rawText.match(urlRegex);
 
@@ -30,16 +29,19 @@ function importLinks() {
     return;
   }
 
-  // Nettoyage de la fin de l'URL (virgules, points, crochets, etc.)
+  // Nettoyage de la ponctuation parasite en fin d'URL
   const cleanLinks = matches.map(link => link.replace(/[,;.]+$|\)+$/, '').trim());
 
-  cleanLinks.forEach(cleanUrl => {
-    const now = new Date();
-    const timestamp = now.getTime();
+  const baseTimestamp = Date.now();
+
+  cleanLinks.forEach((cleanUrl, index) => {
+    // Micro-décalage (+index) pour éviter que deux clés d'objet soient identiques dans la même milliseconde
+    const timestamp = baseTimestamp + index; 
     const totalItems = Object.keys(currentGroup).length;
     const numero = totalItems + 1;
     const nomSite = extractSiteName(cleanUrl);
 
+    const now = new Date(timestamp);
     const heures24 = now.toLocaleTimeString('fr-FR', {
       hour12: false,
       hour: '2-digit',
@@ -49,16 +51,16 @@ function importLinks() {
 
     const dateFormatted = now.toLocaleDateString('fr-FR');
 
-    // Clé du dictionnaire : Timestamp_NomSite
+    // Clé unique garantie pour l'objet JSON : Timestamp_NomSite
     const itemKey = `${timestamp}_${nomSite}`;
     
-    // ID complet : Numero_Timestamp_NomSite
+    // ID interne : Numero_Timestamp_NomSite
     const customId = `${numero}_${timestamp}_${nomSite}`;
 
     currentGroup[itemKey] = {
       id: customId,
       numéro: numero,
-      lien: cleanUrl, // Ici le lien est 100% propre sans le "1." ou "2."
+      lien: cleanUrl,
       nom_site: nomSite,
       date: dateFormatted,
       heures: heures24,
