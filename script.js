@@ -4,14 +4,14 @@ document.addEventListener('DOMContentLoaded', () => {
   renderList();
 });
 
+// Extrait le hostname propre depuis n'importe quelle URL
 function extractSiteName(urlStr) {
   try {
-    const fullUrl = urlStr.match(/^https?:\/\//i) ? urlStr : `https://${urlStr}`;
-    const parsed = new URL(fullUrl);
-    return parsed.hostname;
+    const parsed = new URL(urlStr);
+    // On retire le "www." s'il existe pour un nom de site plus propre
+    return parsed.hostname.replace(/^www\./i, '');
   } catch (e) {
-    const match = urlStr.replace(/^https?:\/\//i, '').split('/')[0];
-    return match || 'inconnu';
+    return 'inconnu';
   }
 }
 
@@ -21,24 +21,24 @@ function importLinks() {
 
   if (!rawText) return;
 
-  // Regex pour capturer uniquement les URLs valides (http ou https)
-  const urlRegex = /(https?:\/\/[^\s]+)/gi;
+  // Regex stricte pour capturer UNIQUEMENT la partie http(s)://...
+  const urlRegex = /https?:\/\/[^\s]+/gi;
   const matches = rawText.match(urlRegex);
 
   if (!matches || matches.length === 0) {
-    alert("Aucun lien valide (http:// ou https://) n'a été détecté.");
+    alert("Aucun lien valide (http:// ou https://) n'a été trouvé.");
     return;
   }
 
-  // Nettoyage des ponctuations parasites en fin d'URL (virgules, points, parenthèses)
+  // Nettoyage de la fin de l'URL (virgules, points, crochets, etc.)
   const cleanLinks = matches.map(link => link.replace(/[,;.]+$|\)+$/, '').trim());
 
-  cleanLinks.forEach(link => {
+  cleanLinks.forEach(cleanUrl => {
     const now = new Date();
     const timestamp = now.getTime();
     const totalItems = Object.keys(currentGroup).length;
     const numero = totalItems + 1;
-    const nomSite = extractSiteName(link);
+    const nomSite = extractSiteName(cleanUrl);
 
     const heures24 = now.toLocaleTimeString('fr-FR', {
       hour12: false,
@@ -49,16 +49,16 @@ function importLinks() {
 
     const dateFormatted = now.toLocaleDateString('fr-FR');
 
-    // Clé de l'objet : Timestamp_NomSite
+    // Clé du dictionnaire : Timestamp_NomSite
     const itemKey = `${timestamp}_${nomSite}`;
     
-    // ID interne : Numero_Timestamp_NomSite
+    // ID complet : Numero_Timestamp_NomSite
     const customId = `${numero}_${timestamp}_${nomSite}`;
 
     currentGroup[itemKey] = {
       id: customId,
       numéro: numero,
-      lien: link,
+      lien: cleanUrl, // Ici le lien est 100% propre sans le "1." ou "2."
       nom_site: nomSite,
       date: dateFormatted,
       heures: heures24,
