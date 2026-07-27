@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0d0f17">
+  <title>Link Importer PWA</title>
+  
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Manifest Web App généré à la volée -->
+  <link rel="manifest" href='data:application/manifest+json,{"name":"Link Importer","short_name":"Importer","start_url":".","display":"standalone","background_color":"#0d0f17","theme_color":"#0d0f17","icons":[{"src":"data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><rect width=\"100\" height=\"100\" rx=\"20\" fill=\"%230d0f17\"/><path d=\"M30 50 L50 70 L70 30\" stroke=\"%2300f3ff\" stroke-width=\"10\" fill=\"none\" stroke-linecap=\"round\"/></svg>","sizes":"512x512","type":"image/svg+xml"}]}'>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>Link Importer</h1>
+    </header>
+
+    <!-- Zone de saisie -->
+    <div class="card">
+      <textarea id="linkInput" placeholder="Collez un ou plusieurs liens ici (un par ligne)..."></textarea>
+      <div class="actions">
+        <button class="btn-primary" onclick="importLinks()">Valider & Importer</button>
+      </div>
+    </div>
+
+    <!-- Zone de données -->
+    <div class="card">
+      <div class="stats">
+        <span id="counter">0 lien(s) dans le groupe</span>
+      </div>
+
+      <div class="list" id="itemsList">
+        <!-- Les éléments apparaîtront ici -->
+      </div>
+
+      <div class="actions" style="margin-top: 1.25rem;">
+        <button class="btn-secondary" onclick="exportJSON()">Télécharger JSON</button>
+        <button class="btn-outline" onclick="copyJSON()">Copier JSON</button>
+        <button class="btn-outline" style="border-color: #ff4757; color: #ff4757;" onclick="clearGroup()">Réinitialiser</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
