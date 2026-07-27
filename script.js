@@ -130,7 +130,15 @@ function clearGroup() {
   }
 }
 
+// Enregistrement du Service Worker avec rechargement automatique à la mise à jour
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js')
-    .catch(err => console.error('Erreur SW:', err));
+  navigator.serviceWorker.register('sw.js').then(reg => {
+    // Vérifie les mises à jour
+    reg.update();
+  }).catch(err => console.error('Erreur SW:', err));
+
+  // Si le nouveau SW prend le contrôle, on rafraîchit pour charger le nouveau code
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    window.location.reload();
+  });
 }
