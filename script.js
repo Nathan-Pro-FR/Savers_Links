@@ -21,9 +21,19 @@ function importLinks() {
 
   if (!rawText) return;
 
-  const lines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  // Regex pour capturer uniquement les URLs valides (http ou https)
+  const urlRegex = /(https?:\/\/[^\s]+)/gi;
+  const matches = rawText.match(urlRegex);
 
-  lines.forEach(link => {
+  if (!matches || matches.length === 0) {
+    alert("Aucun lien valide (http:// ou https://) n'a été détecté.");
+    return;
+  }
+
+  // Nettoyage des ponctuations parasites en fin d'URL (virgules, points, parenthèses)
+  const cleanLinks = matches.map(link => link.replace(/[,;.]+$|\)+$/, '').trim());
+
+  cleanLinks.forEach(link => {
     const now = new Date();
     const timestamp = now.getTime();
     const totalItems = Object.keys(currentGroup).length;
@@ -39,10 +49,10 @@ function importLinks() {
 
     const dateFormatted = now.toLocaleDateString('fr-FR');
 
-    // Clé du dictionnaire : Timestamp_NomSite
+    // Clé de l'objet : Timestamp_NomSite
     const itemKey = `${timestamp}_${nomSite}`;
     
-    // ID complet : Numero_Timestamp_NomSite
+    // ID interne : Numero_Timestamp_NomSite
     const customId = `${numero}_${timestamp}_${nomSite}`;
 
     currentGroup[itemKey] = {
@@ -125,7 +135,6 @@ function clearGroup() {
   }
 }
 
-// Enregistrement du Service Worker externe
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js')
     .catch(err => console.error('Erreur SW:', err));
